@@ -4,8 +4,8 @@ import copy
 #  Currently only VyOS routers + API available
 #
 lg_routers = {
-        "dfw": { "address": "23.181.64.227", "v4-source": "23.181.64.227", "v6-source": "2620:136:a009:af00::227", "type": "VyOS", "description": "Dallas, TX"},
-        "mci": { "address": "23.181.64.228", "v4-source": "23.181.64.228", "v6-source": "2620:136:a009:af00::228", "type": "VyOS", "description": "Kansas City, MO"},
+        "ewr": { "address": "192.0.2.1", "v4-source": "192.0.2.22", "v6-source": "2001:db8::22", "type": "VyOS", "description": "Dallas, TX"},
+        "lhr": { "address": "192.0.2.2", "v4-source": "192.0.2.20", "v6-source": "2001:db8::20", "type": "VyOS", "description": "Kansas City, MO"},
 }
 
 #
