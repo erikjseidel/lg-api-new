@@ -26,20 +26,39 @@ def get_input(request):
 
     router_list = routers.get_routers()
     if router in router_list:
-        router_ip = router_list[router]['address']
+        router_entry = router_list[router]
     else:
         raise BadRequest(error_msg.badRouter)
 
-    return router_ip, target
+    return router_entry, target
 
-def validate_ip(addr):
+def is_ipv4(addr):
     try:
         ipaddress.IPv4Address(addr)
     except ValueError:
-        try:
-            ipaddress.IPv6Address(addr)
-        except ValueError:
-            raise BadRequest(error_msg.badTargetAddr) 
+        return False
+    return True
+
+def is_ipv6(addr):
+    try:
+        ipaddress.IPv6Address(addr)
+    except ValueError:
+        return False
+    return True
+
+def is_ipv4net(addr):
+    try:
+        ipaddress.IPv4Network(addr)
+    except ValueError:
+        return False
+    return True
+
+def is_ipv6net(addr):
+    try:
+        ipaddress.IPv6Network(addr)
+    except ValueError:
+        return False
+    return True
 
 @app.errorhandler(BadRequest)
 def handle_bad_request(error):
@@ -52,48 +71,39 @@ def handle_bad_request(error):
 def lg_routers():
     return jsonify(routers.get_routers_pub())
 
-@app.route('/api/v1/route4', methods=['GET'])
-def lg_route4():
-    router_ip, target = get_input(request)
+@app.route('/api/v1/route', methods=['GET'])
+def lg_route():
+    router_entry, target = get_input(request)
 
-    try:
-        ipaddress.IPv4Network(target)
-    except ValueError:
-        raise BadRequest(error_msg.badTarget4Net) 
-
-    result = vyosApi(router_ip).route4(target)
-    return jsonify(result)
-
-@app.route('/api/v1/route6', methods=['GET'])
-def lg_route6():
-    router_ip, target = get_input(request)
-
-    try:
-        ipaddress.IPv6Network(target)
-    except ValueError:
-        raise BadRequest(error_msg.badTarget6Net) 
-
-    result = vyosApi(router_ip).route6(target)
-    return jsonify(result)
+    if is_ipv6net(target):
+        result = vyosApi(router_entry['address']).route6(target)
+        return jsonify(result)
+    elif is_ipv4net(target):
+        result = vyosApi(router_entry['address']).route4(target)
+        return jsonify(result)
+    else:
+        raise BadRequest(error_msg.badTargetNet)
 
 @app.route('/api/v1/ping', methods=['GET'])
 def lg_ping():
-    router_ip, target = get_input(request)
+    router_entry, target = get_input(request)
 
-    validate_ip(target)
+    if is_ipv6(target):
+        result = vyosApi(router_entry['address']).ping(target, router_entry['v6-source'])
+        return jsonify(result)
+    elif is_ipv4(target):
+        result = vyosApi(router_entry['address']).ping(target, router_entry['v4-source'])
+        return jsonify(result)
+    else:
+        raise BadRequest(error_msg.badTargetAddr)
 
-    result = vyosApi(router_ip).ping(target)
-    return jsonify(result)
 
 @app.route('/api/v1/traceroute', methods=['GET'])
 def lg_traceroute():
-    router_ip, target = get_input(request)
+    router_entry, target = get_input(request)
 
-    validate_ip(target)
-
-    result = vyosApi(router_ip).traceroute(target)
-    return jsonify(result)
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8081, debug=True)
-#    app.run(host='0.0.0.0', port=8081)
+    if is_ipv6(target) or is_ipv4(target):
+        result = vyosApi(router_entry['address']).traceroute(target)
+        return jsonify(result)
+    else:
+        raise BadRequest(error_msg.badTargetAddr)

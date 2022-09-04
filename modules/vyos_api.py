@@ -15,8 +15,13 @@ class vyosApi:
         "port": 22,
     }
 
-    def ping(self, target, count = 5):
-        command = "ping %s source-address %s count %s" % (target, self.router, count)
+    def ping(self, target, src_ip = None, count = 5):
+
+        if src_ip == None:
+           command = "ping %s count %s" % (target, count)
+        else:
+           command = "ping %s source-address %s count %s" % (target, src_ip, count)
+
         return self.__runner(target, command)
 
     def traceroute(self, target):
@@ -45,4 +50,3 @@ class vyosApi:
 
     def __init__(self, router):
         self.vyos_router['host'] = router
-        self.router = router
