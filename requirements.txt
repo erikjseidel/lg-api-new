@@ -1,0 +1,4 @@
+fastapi==0.102.0
+gunicorn==20.1.0
+netmiko==4.3.0
+flask==3.0.3

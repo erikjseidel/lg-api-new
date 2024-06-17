@@ -7,11 +7,13 @@ from modules.vyos_api import vyosApi
 
 app = Flask(__name__)
 
+
 class BadRequest(Exception):
     def __init__(self, message, status=400, payload=None):
         self.message = message
         self.status = status
         self.payload = payload
+
 
 def get_input(request):
     if 'target' in request.args:
@@ -32,12 +34,14 @@ def get_input(request):
 
     return router_entry, target
 
+
 def is_ipv4(addr):
     try:
         ipaddress.IPv4Address(addr)
     except ValueError:
         return False
     return True
+
 
 def is_ipv6(addr):
     try:
@@ -46,12 +50,14 @@ def is_ipv6(addr):
         return False
     return True
 
+
 def is_ipv4net(addr):
     try:
         ipaddress.IPv4Network(addr)
     except ValueError:
         return False
     return True
+
 
 def is_ipv6net(addr):
     try:
@@ -60,6 +66,7 @@ def is_ipv6net(addr):
         return False
     return True
 
+
 @app.errorhandler(BadRequest)
 def handle_bad_request(error):
     payload = dict(error.payload or ())
@@ -67,9 +74,11 @@ def handle_bad_request(error):
     payload['message'] = error.message
     return jsonify(payload), 400
 
+
 @app.route('/api/v1/routers', methods=['GET'])
 def lg_routers():
     return jsonify(routers.get_routers_pub())
+
 
 @app.route('/api/v1/route', methods=['GET'])
 def lg_route():
@@ -84,15 +93,20 @@ def lg_route():
     else:
         raise BadRequest(error_msg.badTargetNet)
 
+
 @app.route('/api/v1/ping', methods=['GET'])
 def lg_ping():
     router_entry, target = get_input(request)
 
     if is_ipv6(target):
-        result = vyosApi(router_entry['address']).ping(target, router_entry['v6-source'])
+        result = vyosApi(router_entry['address']).ping(
+            target, router_entry['v6-source']
+        )
         return jsonify(result)
     elif is_ipv4(target):
-        result = vyosApi(router_entry['address']).ping(target, router_entry['v4-source'])
+        result = vyosApi(router_entry['address']).ping(
+            target, router_entry['v4-source']
+        )
         return jsonify(result)
     else:
         raise BadRequest(error_msg.badTargetAddr)
